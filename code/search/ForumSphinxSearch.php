@@ -15,9 +15,9 @@
 
 class ForumSphinxSearch implements ForumSearchProvider
 {
-    
+
     private $search_cache = array();
-    
+
     // These are classes that *may* be indexed by Sphinx. If they are,
     // we can search for them, and we may need to add extra sphinx
     // properties to them.
@@ -40,12 +40,12 @@ class ForumSphinxSearch implements ForumSearchProvider
         switch ($order) {
             case 'date':
                 $mode = 'fields';
-                
+
                 $sortarg = array('Created' => 'DESC');
                 break;
             case 'title':
                 $mode = 'fields';
-                
+
                 $sortarg = array('Title' => 'ASC');
                 break;
             default:
@@ -60,7 +60,7 @@ class ForumSphinxSearch implements ForumSearchProvider
 
                 break;
         }
-        
+
         $cachekey = $query.':'.$offset;
         if (!isset($this->search_cache[$cachekey])) {
             // Determine the classes to search. This always include
@@ -69,7 +69,7 @@ class ForumSphinxSearch implements ForumSearchProvider
             // appropriate.
             $classes = array('ForumThread', 'Post');
             foreach (self::$extra_search_classes as $c) {
-                if (Object::has_extension($c, 'SphinxSearchable')) {
+                if (SS_Object::has_extension($c, 'SphinxSearchable')) {
                     $classes[] = $c;
                 }
             }
@@ -82,7 +82,7 @@ class ForumSphinxSearch implements ForumSearchProvider
                 'field_weights'     => $fieldWeights
             ));
         }
-        
+
         return $this->search_cache[$cachekey]->Matches;
     }
 
@@ -125,19 +125,19 @@ class ForumSphinxSearch implements ForumSearchProvider
         // we still have to add the extra field _ageband, but we set it
         // to 10 so it's sorted like it's recent.
         DataObject::add_extension('ForumThread', 'SphinxSearchable');
-        Object::set_static("ForumThread", "sphinx", array(
+        SS_Object::set_static("ForumThread", "sphinx", array(
             "extra_fields" => array("_ageband" => "if(datediff(now(),LastEdited)<30,10,if(datediff(now(),LastEdited)<90,9,if(datediff(now(),LastEdited)<180,8,if(datediff(now(),LastEdited)<365,7,6))))")
         ));
         DataObject::add_extension('Post', 'SphinxSearchable');
-        Object::set_static("Post", "sphinx", array(
+        SS_Object::set_static("Post", "sphinx", array(
             "extra_fields" => array("_ageband" => "if(datediff(now(),Created)<30,10,if(datediff(now(),Created)<90,9,if(datediff(now(),Created)<180,8,if(datediff(now(),Created)<365,7,6))))")
         ));
 
         // For classes that might be indexed, add the extra field if they
         // are decorated with SphinxSearchable.
         foreach (self::$extra_search_classes as $c) {
-            if (Object::has_extension($c, 'SphinxSearchable')) {
-                $conf = Object::uninherited_static($c, "sphinx");
+            if (SS_Object::has_extension($c, 'SphinxSearchable')) {
+                $conf = SS_Object::uninherited_static($c, "sphinx");
                 if (!$conf) {
                     $conf = array();
                 }
@@ -145,7 +145,7 @@ class ForumSphinxSearch implements ForumSearchProvider
                     $conf['extra_fields'] = array();
                 }
                 $conf['extra_fields']['_ageband'] = "10";
-                Object::set_static($c, "sphinx", $conf);
+                SS_Object::set_static($c, "sphinx", $conf);
             }
         }
     }
